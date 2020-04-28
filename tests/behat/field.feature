@@ -13,7 +13,7 @@ Feature: Managers can manage course custom fields select
 
   Scenario: Create a custom course select field
     When I click on "Add a new custom field" "link"
-    And I click on "Dropdown menu" "link"
+    And I click on "Multiselect menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
@@ -28,7 +28,7 @@ Feature: Managers can manage course custom fields select
 
   Scenario: Edit a custom course select field
     When I click on "Add a new custom field" "link"
-    And I click on "Dropdown menu" "link"
+    And I click on "Multiselect menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
@@ -49,7 +49,7 @@ Feature: Managers can manage course custom fields select
   @javascript
   Scenario: Delete a custom course select field
     When I click on "Add a new custom field" "link"
-    And I click on "Dropdown menu" "link"
+    And I click on "Multiselect menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
@@ -66,7 +66,7 @@ Feature: Managers can manage course custom fields select
 
   Scenario: Validation of custom course select field configuration
     When I click on "Add a new custom field" "link"
-    And I click on "Dropdown menu" "link"
+    And I click on "Multiselect menu" "link"
     And I set the following fields to these values:
       | Name       | Test field |
       | Short name | testfield  |
@@ -79,7 +79,7 @@ Feature: Managers can manage course custom fields select
     """
     And I set the field "Default value" to "c"
     And I press "Save changes"
-    And I should see "The default value must be one of the options from the list above" in the "Default value" "form_row"
+    And I should see "The default value \"c\" must be one of the options from the list above" in the "Default value" "form_row"
     And I set the field "Default value" to "b"
     And I press "Save changes"
     And "testfield" "text" should exist in the "Test field" "table_row"
