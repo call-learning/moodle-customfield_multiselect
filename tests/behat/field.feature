@@ -1,5 +1,5 @@
 @customfield @customfield_multiselect
-Feature: Managers can manage course custom fields select
+Feature: Managers can manage course custom fields Multiselect
   In order to have additional data on the course
   As a manager
   I need to create, edit, remove and sort custom fields
