@@ -39,6 +39,7 @@ class data_controller extends \core_customfield\data_controller {
 
     /**
      * Datafield value (here 'value')
+     *
      * @return string
      */
     public function datafield(): string {
@@ -80,6 +81,7 @@ class data_controller extends \core_customfield\data_controller {
 
     /**
      * Define the form
+     *
      * @param \MoodleQuickForm $mform
      * @throws \coding_exception
      */
@@ -96,29 +98,27 @@ class data_controller extends \core_customfield\data_controller {
             $formattedoptions[$key] = format_string($option, true, ['context' => $context]);
         }
 
-        $widgetgroup = [];
+
         $elementname = $this->get_form_element_name();
-        $widgetgroup[] =
-            $mform->createElement('select',
-                $elementname,
-                $this->get_field()->get_formatted_name(),
-                $formattedoptions,
-                $attributes);
+        $mform->addElement('select', $elementname,
+            $this->get_field()->get_formatted_name(),
+            $formattedoptions, $attributes);
 
         $clearbtnname = $this->get_form_element_name() . '_cls';
-        $widgetgroup[] = $mform->createElement('button', $clearbtnname,
+        $mform->addElement('button', $clearbtnname,
             get_string('clear', 'customfield_multiselect'));
-        $groupname = 'wg_'.$this->get_form_element_name();
-        $mform->addGroup($widgetgroup, $groupname, '&nbsp;', ' &nbsp; ', false);
-        $PAGE->requires->js_call_amd('customfield_multiselect/clear', 'init', array(
-            "id_{$clearbtnname}", "id_{$elementname}"
-        ));
+
         if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
             $mform->setDefault($elementname, $defaultkey);
         }
         if ($field->get_configdata_property('required')) {
-            $mform->addGroupRule($groupname, get_string('required'), 'required', null, 1);
+            $mform->addRule($elementname, null, 'required', null, 'client');
         }
+
+        $PAGE->requires->js_call_amd('customfield_multiselect/clear', 'init', array(
+            "id_{$clearbtnname}", "id_{$elementname}"
+        ));
+
     }
 
     /**
@@ -172,17 +172,15 @@ class data_controller extends \core_customfield\data_controller {
         return $this->set($this->datafield(), implode(',', $value));
     }
 
-
     /**
      * Checks if the value is empty
      *
      * @param mixed $value
      * @return bool
      */
-    protected function is_empty($value) : bool {
+    protected function is_empty($value): bool {
         return empty($value);
     }
-
 
     /**
      * Returns value in a human-readable format or default value if data record is not present
