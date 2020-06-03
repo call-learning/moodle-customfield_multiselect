@@ -15,5 +15,5 @@ Still work in progress.
 
 TODO
 ====
- * Allow to change the select into a series of cheboxes for small amount of selections.
- * When values are removed from the list, we would need to reindex ?
+ * Allow to change the select into a series of cheboxes for small amounts of choices.
+ * When values are removed from the list, should we re-index ?
