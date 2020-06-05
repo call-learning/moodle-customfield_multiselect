@@ -98,7 +98,6 @@ class data_controller extends \core_customfield\data_controller {
             $formattedoptions[$key] = format_string($option, true, ['context' => $context]);
         }
 
-
         $elementname = $this->get_form_element_name();
         $mform->addElement('select', $elementname,
             $this->get_field()->get_formatted_name(),
