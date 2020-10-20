@@ -41,7 +41,6 @@ class field_controller extends \core_customfield\field_controller {
 
     /**
      * Form defintion for multiselect
-     *
      * @param \MoodleQuickForm $mform
      * @throws \coding_exception
      */
@@ -52,11 +51,7 @@ class field_controller extends \core_customfield\field_controller {
         $mform->addElement('textarea', 'configdata[options]', get_string('menuoptions', 'customfield_multiselect'));
         $mform->setType('configdata[options]', PARAM_TEXT);
 
-        $mform->addElement('text', 'configdata[defaultvalue]',
-            get_string('defaultvalue', 'customfield_multiselect')
-        );
-        $mform->addHelpButton('configdata[defaultvalue]',
-            'defaultvalue', 'customfield_multiselect');
+        $mform->addElement('text', 'configdata[defaultvalue]', get_string('defaultvalue', 'customfield_multiselect'));
         $mform->setType('configdata[defaultvalue]', PARAM_TEXT);
     }
 
