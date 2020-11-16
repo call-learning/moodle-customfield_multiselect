@@ -51,7 +51,7 @@ class data_controller extends \core_customfield\data_controller {
      * Get the default value for this field.  The default value is a list of valid options.
      * We just verify they exist before sending their index back.
      *
-     * @return array a list of index of matching options
+     * @return string a list of comma separated index of matching options
      */
     public function get_default_value() {
         $defaultvalue = $this->get_field()->get_configdata_property('defaultvalue');
@@ -65,7 +65,7 @@ class data_controller extends \core_customfield\data_controller {
                 $defaultvaluesarray[] = intval($index);
             }
         }
-        return $defaultvaluesarray;
+        return implode(',', $defaultvaluesarray);
     }
 
     /**
@@ -129,7 +129,7 @@ class data_controller extends \core_customfield\data_controller {
      *    fields for this instance will be added, otherwise the default values will be added.
      */
     public function instance_form_before_set_data(\stdClass $instance) {
-        $instance->{$this->get_form_element_name()} = implode(',', $this->get_value());
+        $instance->{$this->get_form_element_name()} = $this->get_value();
     }
 
     /**
@@ -152,13 +152,13 @@ class data_controller extends \core_customfield\data_controller {
     /**
      * Returns the value as it is stored in the database or default value if data record is not present
      *
-     * @return array
+     * @return string comma separated list of items
      */
     public function get_value() {
         if (!$this->get('id')) {
             return $this->get_default_value();
         }
-        return explode(',', $this->get($this->datafield()));
+        return $this->get($this->datafield());
     }
 
     /**
@@ -178,7 +178,7 @@ class data_controller extends \core_customfield\data_controller {
      * @return bool
      */
     protected function is_empty($value): bool {
-        return empty($value);
+        return trim($value) === "";
     }
 
     /**
@@ -189,15 +189,19 @@ class data_controller extends \core_customfield\data_controller {
      * @return mixed|null value or null if empty
      */
     public function export_value() {
-        $values = $this->get_value(); // This is a an array of indexes.
+        $values = $this->get_value(); // This is a string of comma separated list of indexes.
 
         if ($this->is_empty($values)) {
             return null;
         }
-
+        // Change into an array for parsing.
+        $valuesarray = explode(',', $values);
+        if (!$valuesarray) {
+            $valuesarray = [];
+        }
         $commasepoptionvalues = "";
         $options = field_controller::get_options_array($this->get_field());
-        foreach ($values as $val) {
+        foreach ($valuesarray as $val) {
             if (!empty($options[$val])) {
                 $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
                     format_string($options[$val], true,

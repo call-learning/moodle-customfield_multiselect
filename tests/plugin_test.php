@@ -167,17 +167,17 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
      * Test for data_controller::get_value and export_value
      */
     public function test_get_export_value() {
-        $this->assertEquals([0], $this->cfdata[1]->get_value());
+        $this->assertEquals("0", $this->cfdata[1]->get_value());
         $this->assertEquals('a', $this->cfdata[1]->export_value());
 
         // Field without data but with a default value.
         $d = core_customfield\data_controller::create(0, null, $this->cfields[3]);
-        $this->assertEquals([1], $d->get_value());
+        $this->assertEquals("1", $d->get_value());
         $this->assertEquals('b', $d->export_value());
 
         // Field without data but with a default value.
         $d = core_customfield\data_controller::create(0, null, $this->cfields[4]);
-        $this->assertEquals([1, 2], $d->get_value());
+        $this->assertEquals("1,2", $d->get_value());
         $this->assertEquals('b, c', $d->export_value());
     }
 
