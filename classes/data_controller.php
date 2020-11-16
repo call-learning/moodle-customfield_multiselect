@@ -103,7 +103,7 @@ class data_controller extends \core_customfield\data_controller {
             $this->get_field()->get_formatted_name(),
             $formattedoptions,
             $attributes);
-        
+
         if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
             $mform->setDefault($elementname, $defaultkey);
         }
