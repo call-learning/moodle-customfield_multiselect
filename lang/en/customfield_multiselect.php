@@ -30,7 +30,6 @@ $string['errornotenoughoptions'] = 'Please provide at least two options, with ea
 $string['invalidoption'] = 'Invalid option selected';
 $string['menuoptions'] = 'Menu options (one per line)';
 $string['defaultvalue'] = 'Default value';
-$string['clear'] = 'Clear';
 $string['pluginname'] = 'Multiselect menu';
 $string['privacy:metadata'] = 'The Multiselect menu field type plugin doesn\'t store any personal data; it uses tables defined in core.';
 $string['specificsettings'] = 'Multiselect menu field settings';

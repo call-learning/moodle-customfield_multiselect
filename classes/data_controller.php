@@ -91,7 +91,6 @@ class data_controller extends \core_customfield\data_controller {
         $config = $field->get('configdata');
         $options = field_controller::get_options_array($field);
         $formattedoptions = [];
-        $attributes = array('multiple' => true);
         $context = $this->get_field()->get_handler()->get_configuration_context();
         foreach ($options as $key => $option) {
             // Multilang formatting with filters.
@@ -99,25 +98,18 @@ class data_controller extends \core_customfield\data_controller {
         }
 
         $elementname = $this->get_form_element_name();
-        $mform->addElement('select', $elementname,
+        $attributes = array('multiple' => true);
+        $mform->addElement('autocomplete', $elementname,
             $this->get_field()->get_formatted_name(),
-            $formattedoptions, $attributes);
-
-        $clearbtnname = $this->get_form_element_name() . '_cls';
-        $mform->addElement('button', $clearbtnname,
-            get_string('clear', 'customfield_multiselect'));
-
+            $formattedoptions,
+            $attributes);
+        
         if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
             $mform->setDefault($elementname, $defaultkey);
         }
         if ($field->get_configdata_property('required')) {
             $mform->addRule($elementname, null, 'required', null, 'client');
         }
-
-        $PAGE->requires->js_call_amd('customfield_multiselect/clear', 'init', array(
-            "id_{$clearbtnname}", "id_{$elementname}"
-        ));
-
     }
 
     /**
