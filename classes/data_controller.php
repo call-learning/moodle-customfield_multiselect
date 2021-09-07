@@ -55,7 +55,7 @@ class data_controller extends \core_customfield\data_controller {
      */
     public function get_default_value() {
         $defaultvalue = $this->get_field()->get_configdata_property('defaultvalue');
-        $options = field_controller::get_options_array($this->get_field());
+        $options = $this->get_field()->get_options();
         $defaultvaluesarray = [];
         $values = explode(",", $defaultvalue);
 
@@ -86,10 +86,9 @@ class data_controller extends \core_customfield\data_controller {
      * @throws \coding_exception
      */
     public function instance_form_definition(\MoodleQuickForm $mform) {
-        global $PAGE;
         $field = $this->get_field();
         $config = $field->get('configdata');
-        $options = field_controller::get_options_array($field);
+        $options = $field->get_options();
         $formattedoptions = [];
         $context = $this->get_field()->get_handler()->get_configuration_context();
         foreach ($options as $key => $option) {
@@ -192,7 +191,7 @@ class data_controller extends \core_customfield\data_controller {
             $valuesarray = [];
         }
         $commasepoptionvalues = "";
-        $options = field_controller::get_options_array($this->get_field());
+        $options = $this->get_field()->get_options();
         foreach ($valuesarray as $val) {
             if (!empty($options[$val])) {
                 $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
@@ -202,5 +201,4 @@ class data_controller extends \core_customfield\data_controller {
         }
         return $commasepoptionvalues;
     }
-
 }

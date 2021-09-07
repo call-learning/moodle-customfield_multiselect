@@ -41,6 +41,7 @@ class field_controller extends \core_customfield\field_controller {
 
     /**
      * Form defintion for multiselect
+     *
      * @param \MoodleQuickForm $mform
      * @throws \coding_exception
      */
@@ -58,16 +59,26 @@ class field_controller extends \core_customfield\field_controller {
     /**
      * Returns the options available as an array.
      *
-     * @param \core_customfield\field_controller $field
      * @return array
      */
-    public static function get_options_array(\core_customfield\field_controller $field): array {
-        if ($field->get_configdata_property('options')) {
-            $options = preg_split("/\s*\n\s*/", trim($field->get_configdata_property('options')));
+    public function get_options(): array {
+        if ($this->get_configdata_property('options')) {
+            $options = preg_split("/\s*\n\s*/", trim($this->get_configdata_property('options')));
         } else {
             $options = array();
         }
         return $options;
+    }
+
+    /**
+     * Returns the options available as an array.
+     * Method compatible with select type of customfield.
+     *
+     * @param \core_customfield\field_controller $field
+     * @return array
+     */
+    public static function get_options_array(\core_customfield\field_controller $field): array {
+        return $field->get_options();
     }
 
     /**
@@ -96,5 +107,31 @@ class field_controller extends \core_customfield\field_controller {
             }
         }
         return $errors;
+    }
+
+    /**
+     * Separator between different option when parsing.
+     */
+    const PARSE_SEPARATOR = '|';
+    /**
+     * Locate the values set in the list (comma separated list), and return the corresponding
+     * indexed list.
+     *
+     * @param string $value
+     * @return $value
+     */
+    public function parse_value(string $value) {
+        $options = $this->get_options();
+        $values = array_map(function($val) {
+            return trim(strtolower($val));
+        }, explode(self::PARSE_SEPARATOR, $value));
+        $indexvalues = [];
+        foreach ($options as $index => $value) {
+            if (in_array(trim(strtolower($value)), $values)) {
+                $indexvalues[] = $index;
+            }
+        }
+        sort($indexvalues);
+        return implode(',', $indexvalues);
     }
 }

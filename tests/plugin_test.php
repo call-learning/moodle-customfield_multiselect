@@ -181,6 +181,44 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
         $this->assertEquals('b, c', $d->export_value());
     }
 
+
+    /**
+     * Data provider for {@see test_parse_value}
+     *
+     * @return array
+     */
+    public function parse_value_provider() : array {
+        return [
+            ['Red', "0"],
+            ['Blue|Green', "1,2"],
+            ['Green| red', "0,2"],
+            ['Mauve', ""],
+        ];
+    }
+
+    /**
+     * Test field parse_value method
+     *
+     * @param string $value
+     * @param int $expected
+     * @return void
+     *
+     * @dataProvider parse_value_provider
+     */
+    public function test_parse_value(string $value, string $expected) {
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_customfield');
+        $field = $generator->create_field([
+            'categoryid' => $this->cfcat->get('id'),
+            'type' => 'multiselect',
+            'shortname' => 'mymultiselect',
+            'configdata' => [
+                'options' => "Red\nBlue\nGreen",
+            ],
+        ]);
+
+        $this->assertSame($expected, $field->parse_value($value));
+    }
+
     /**
      * Deleting fields and data
      */
