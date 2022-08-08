@@ -15,123 +15,269 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Customfield multiselect Type
+ * Field controller abstract class
  *
- * @package   customfield_multiselect
- * @copyright  2020 CALL Learning 2020 - Laurent David <laurent@call-learning.fr>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   core_customfield
+ * @copyright 2018 Toni Barbera <toni@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace customfield_multiselect;
+namespace core_customfield;
 
 defined('MOODLE_INTERNAL') || die;
 
 /**
- * Class field
+ * Base class for custom fields controllers
  *
- * @package   customfield_multiselect
- * @copyright 2018 David Matamoros <davidmc@moodle.com>
+ * This class is a wrapper around the persistent field class that allows to define the field
+ * configuration
+ *
+ * Custom field plugins must define a class
+ * \{pluginname}\field_controller extends \core_customfield\field_controller
+ *
+ * @package core_customfield
+ * @copyright 2018 Toni Barbera <toni@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class field_controller extends \core_customfield\field_controller {
-    /**
-     * Customfield type
-     */
-    const TYPE = 'multiselect';
+abstract class field_controller {
 
     /**
-     * Form defintion for multiselect
+     * Field persistent class
      *
-     * @param \MoodleQuickForm $mform
+     * @var field
+     */
+    protected $field;
+
+    /**
+     * Category of the field.
+     *
+     * @var category_controller
+     */
+    protected $category;
+
+    /**
+     * Constructor.
+     *
+     * @param int $id
+     * @param \stdClass|null $record
+     */
+    public function __construct(int $id = 0, \stdClass $record = null) {
+        $this->field = new field($id, $record);
+    }
+
+    /**
+     * Creates an instance of field_controller
+     *
+     * Parameters $id, $record and $category can complement each other but not conflict.
+     * If $id is not specified, categoryid must be present either in $record or in $category.
+     * If $id is not specified, type must be present in $record
+     *
+     * No DB queries are performed if both $record and $category are specified.
+     *
+     * @param int $id
+     * @param \stdClass|null $record
+     * @param category_controller|null $category
+     * @return field_controller will return the instance of the class from the customfield element plugin
      * @throws \coding_exception
+     * @throws \moodle_exception
      */
-    public function config_form_definition(\MoodleQuickForm $mform) {
-        $mform->addElement('header', 'header_specificsettings', get_string('specificsettings', 'customfield_multiselect'));
-        $mform->setExpanded('header_specificsettings', true);
-
-        $mform->addElement('textarea', 'configdata[options]', get_string('menuoptions', 'customfield_multiselect'));
-        $mform->setType('configdata[options]', PARAM_TEXT);
-
-        $mform->addElement('text', 'configdata[defaultvalue]', get_string('defaultvalue', 'customfield_multiselect'));
-        $mform->setType('configdata[defaultvalue]', PARAM_TEXT);
-    }
-
-    /**
-     * Returns the options available as an array.
-     *
-     * @return array
-     */
-    public function get_options(): array {
-        if ($this->get_configdata_property('options')) {
-            $options = preg_split("/\s*\n\s*/", trim($this->get_configdata_property('options')));
-        } else {
-            $options = array();
+    public static function create(int $id, \stdClass $record = null, category_controller $category = null) : field_controller {
+        global $DB;
+        if ($id && $record) {
+            // This warning really should be in persistent as well.
+            debugging('Too many parameters, either id need to be specified or a record, but not both.',
+                DEBUG_DEVELOPER);
         }
-        return $options;
+        if ($id) {
+            if (!$record = $DB->get_record(field::TABLE, array('id' => $id), '*', IGNORE_MISSING)) {
+                throw new \moodle_exception('fieldnotfound', 'core_customfield');
+            }
+        }
+
+        if (empty($record->categoryid)) {
+            if (!$category) {
+                throw new \coding_exception('Not enough parameters to initialise field_controller - unknown category');
+            } else {
+                $record->categoryid = $category->get('id');
+            }
+        }
+        if (empty($record->type)) {
+            throw new \coding_exception('Not enough parameters to initialise field_controller - unknown field type');
+        }
+
+        $type = $record->type;
+        if (!$category) {
+            $category = category_controller::create($record->categoryid);
+        }
+        if ($category->get('id') != $record->categoryid) {
+            throw new \coding_exception('Category of the field does not match category from the parameter');
+        }
+
+        $customfieldtype = "\\customfield_{$type}\\field_controller";
+        if (!class_exists($customfieldtype) || !is_subclass_of($customfieldtype, self::class)) {
+            throw new \moodle_exception('errorfieldtypenotfound', 'core_customfield', '', s($type));
+        }
+        $fieldcontroller = new $customfieldtype(0, $record);
+        $fieldcontroller->category = $category;
+        $category->add_field($fieldcontroller);
+        return $fieldcontroller;
     }
 
     /**
-     * Returns the options available as an array.
-     * Method compatible with select type of customfield.
+     * Perform pre-processing of field values, for example those that originate from an external source (e.g. upload course tool)
      *
-     * @param \core_customfield\field_controller $field
-     * @return array
+     * Override in plugin classes as necessary
+     *
+     * @param string $value
+     * @return mixed
      */
-    public static function get_options_array(\core_customfield\field_controller $field): array {
-        return $field->get_options();
+    public function parse_value(string $value) {
+        return $value;
     }
 
     /**
-     * Validate the data from the config form.
-     * Sub classes must reimplement it.
+     * Validate the data on the field configuration form
+     *
+     * Plugins can override it
      *
      * @param array $data from the add/edit profile field form
      * @param array $files
      * @return array associative array of error messages
-     * @throws \coding_exception
      */
-    public function config_form_validation(array $data, $files = array()): array {
-        $options = preg_split("/\s*\n\s*/", trim($data['configdata']['options']));
-        $errors = [];
-        if (!$options || count($options) < 2) {
-            $errors['configdata[options]'] = get_string('errornotenoughoptions', 'customfield_multiselect');
-        } else if (!empty($data['configdata']['defaultvalue'])) {
-            $defaultvalue = $data['configdata']['defaultvalue'];
-            foreach (explode(',', $defaultvalue) as $val) {
-                $defaultkey = array_search($val, $options);
-                if ($defaultkey === false) {
-                    $errors['configdata[defaultvalue]'] = get_string('errordefaultvaluenotinlist',
-                        'customfield_multiselect', $val);
-                    break;
-                }
-            }
-        }
-        return $errors;
+    public function config_form_validation(array $data, $files = array()) : array {
+        return array();
+    }
+
+
+    /**
+     * Persistent getter parser.
+     *
+     * @param string $property
+     * @return mixed
+     */
+    final public function get(string $property) {
+        return $this->field->get($property);
     }
 
     /**
-     * Separator between different option when parsing.
-     */
-    const PARSE_SEPARATOR = '|';
-    /**
-     * Locate the values set in the list (comma separated list), and return the corresponding
-     * indexed list.
+     * Persistent setter parser.
      *
-     * @param string $value
-     * @return $value
+     * @param string $property
+     * @param mixed $value
+     * @return field
      */
-    public function parse_value(string $value) {
-        $options = $this->get_options();
-        $values = array_map(function($val) {
-            return trim(strtolower($val));
-        }, explode(self::PARSE_SEPARATOR, $value));
-        $indexvalues = [];
-        foreach ($options as $index => $value) {
-            if (in_array(trim(strtolower($value)), $values)) {
-                $indexvalues[] = $index;
-            }
+    final public function set($property, $value) {
+        return $this->field->set($property, $value);
+    }
+
+    /**
+     * Delete a field and all associated data
+     *
+     * Plugins may override it if it is necessary to delete related data (such as files)
+     *
+     * Not that the delete() method from data_controller is not called here.
+     *
+     * @return bool
+     */
+    public function delete() : bool {
+        global $DB;
+        $DB->delete_records('customfield_data', ['fieldid' => $this->get('id')]);
+        return $this->field->delete();
+    }
+
+    /**
+     * Save or update the persistent class to database.
+     *
+     * @return void
+     */
+    public function save() {
+        $this->field->save();
+    }
+
+    /**
+     * Persistent to_record parser.
+     *
+     * @return \stdClass
+     */
+    final public function to_record() {
+        return $this->field->to_record();
+    }
+
+    /**
+     * Get the category associated with this field
+     *
+     * @return category_controller
+     */
+    public final function get_category() : category_controller {
+        return $this->category;
+    }
+
+    /**
+     * Get configdata property.
+     *
+     * @param string $property name of the property
+     * @return mixed
+     */
+    public function get_configdata_property(string $property) {
+        $configdata = $this->field->get('configdata');
+        if (!isset($configdata[$property])) {
+            return null;
         }
-        sort($indexvalues);
-        return implode(',', $indexvalues);
+        return $configdata[$property];
+    }
+
+    /**
+     * Returns a handler for this field
+     *
+     * @return handler
+     */
+    public final function get_handler() : handler {
+        return $this->get_category()->get_handler();
+    }
+
+    /**
+     * Prepare the field data to set in the configuration form
+     *
+     * Plugin can override if some preprocessing required for editor or filemanager fields
+     *
+     * @param \stdClass $formdata
+     */
+    public function prepare_for_config_form(\stdClass $formdata) {
+    }
+
+    /**
+     * Add specific settings to the field configuration form, for example "default value"
+     *
+     * @param \MoodleQuickForm $mform
+     */
+    public abstract function config_form_definition(\MoodleQuickForm $mform);
+
+    /**
+     * Returns the field name formatted according to configuration context.
+     *
+     * @return string
+     */
+    public function get_formatted_name() : string {
+        $context = $this->get_handler()->get_configuration_context();
+        return format_string($this->get('name'), true, ['context' => $context]);
+    }
+
+    /**
+     * Does this custom field type support being used as part of the block_myoverview
+     * custom field grouping?
+     * @return bool
+     */
+    public function supports_course_grouping(): bool {
+        return false;
+    }
+
+    /**
+     * If this field supports course filtering, then this function needs overriding to
+     * return the formatted values for this.
+     * @param array $values the used values that need grouping
+     * @return array
+     */
+    public function course_grouping_format_values($values): array {
+        return [];
     }
 }
