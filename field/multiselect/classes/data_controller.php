@@ -86,7 +86,7 @@ class data_controller extends \core_customfield\data_controller {
                 $defaultvaluesarray[] = intval($index);
             }
         }
-        return implode(",", $defaultvalues);
+        return implode(",", $defaultvaluesarray);
     }
 
     /**
@@ -218,22 +218,23 @@ class data_controller extends \core_customfield\data_controller {
      * @return mixed|null value or null if empty
      */
     public function export_value() {
-        $values = $this->get_value(); // This is a an array of indexes.
+    //     $values = $this->get_value(); // This is a an array of indexes.
 
-        if ($this->is_empty($values)) {
-            return null;
-        }
+    //     if ($this->is_empty($values)) {
+    //         return null;
+    //     }
 
-        $commasepoptionvalues = "";
-        $options = field_controller::get_options_array($this->get_field());
-        foreach ($values as $val) {
-            if (!empty($options[$val])) {
-                $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
-                    format_string($options[$val], true,
-                        ['context' => $this->get_field()->get_handler()->get_configuration_context()]);
-            }
-        }
-        return $commasepoptionvalues;
+    //     $commasepoptionvalues = "";
+    //     $options = field_controller::get_options_array($this->get_field());
+    //     foreach ($values as $val) {
+    //         if (!empty($options[$val])) {
+    //             $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
+    //                 format_string($options[$val], true,
+    //                     ['context' => $this->get_field()->get_handler()->get_configuration_context()]);
+    //         }
+    //     }
+    //     return $commasepoptionvalues;
+    // }
+        return '';
     }
-
 }

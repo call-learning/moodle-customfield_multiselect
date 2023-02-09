@@ -35,3 +35,5 @@ $string['clear'] = 'Clear';
 $string['pluginname'] = 'Multiselect menu';
 $string['privacy:metadata'] = 'The Multiselect menu field type plugin doesn\'t store any personal data; it uses tables defined in core.';
 $string['specificsettings'] = 'Multiselect menu field settings';
+$string['task'] = 'Create literal values';
+$string['field_task'] = 'Monitor field changes';
