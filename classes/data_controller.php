@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
 /**
  * Customfield multiselect Type
  *
@@ -43,8 +44,7 @@ class data_controller extends \core_customfield\data_controller {
      * @return string
      */
     public function datafield(): string {
-        return 'value'; // There could be a discussion here if it could not be a char value, but for long list that could have
-        // been a limitation.
+        return 'value';
     }
 
     /**
@@ -53,7 +53,7 @@ class data_controller extends \core_customfield\data_controller {
      *
      * @return string a list of comma separated index of matching options
      */
-    public function get_default_value() {
+    public function get_default_value(): string {
         $defaultvalue = $this->get_field()->get_configdata_property('defaultvalue');
         $options = $this->get_field()->get_options();
         $defaultvaluesarray = [];
@@ -145,7 +145,7 @@ class data_controller extends \core_customfield\data_controller {
      *
      * @return string comma separated list of items
      */
-    public function get_value() {
+    public function get_value(): string {
         if (!$this->get('id')) {
             return $this->get_default_value();
         }
@@ -180,7 +180,7 @@ class data_controller extends \core_customfield\data_controller {
      * @return mixed|null value or null if empty
      */
     public function export_value() {
-        $values = $this->get_value(); // This is a string of comma separated list of indexes.
+        $values = $this->get_value();
 
         if ($this->is_empty($values)) {
             return null;

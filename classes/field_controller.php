@@ -90,7 +90,7 @@ class field_controller extends \core_customfield\field_controller {
      * @return array associative array of error messages
      * @throws \coding_exception
      */
-    public function config_form_validation(array $data, $files = array()): array {
+    public function config_form_validation(array $data, $files = []): array {
         $options = preg_split("/\s*\n\s*/", trim($data['configdata']['options']));
         $errors = [];
         if (!$options || count($options) < 2) {
