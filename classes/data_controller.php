@@ -51,11 +51,11 @@ class data_controller extends \core_customfield\data_controller {
      * Get the default value for this field.  The default value is a list of valid options.
      * We just verify they exist before sending their index back.
      *
-     * @return string a list of comma separated index of matching options
+     * @return array a list of index of matching options
      */
     public function get_default_value() {
         $defaultvalue = $this->get_field()->get_configdata_property('defaultvalue');
-        $options = $this->get_field()->get_options();
+        $options = field_controller::get_options($this->get_field());
         $defaultvaluesarray = [];
         $values = explode(",", $defaultvalue);
 
@@ -65,7 +65,7 @@ class data_controller extends \core_customfield\data_controller {
                 $defaultvaluesarray[] = intval($index);
             }
         }
-        return implode(',', $defaultvaluesarray);
+        return $defaultvaluesarray;
     }
 
     /**
@@ -86,9 +86,10 @@ class data_controller extends \core_customfield\data_controller {
      * @throws \coding_exception
      */
     public function instance_form_definition(\MoodleQuickForm $mform) {
+        global $PAGE;
         $field = $this->get_field();
         $config = $field->get('configdata');
-        $options = $field->get_options();
+        $options = field_controller::get_options($field);
         $formattedoptions = [];
         $context = $this->get_field()->get_handler()->get_configuration_context();
         foreach ($options as $key => $option) {
@@ -97,18 +98,34 @@ class data_controller extends \core_customfield\data_controller {
         }
 
         $elementname = $this->get_form_element_name();
-        $attributes = array('multiple' => true);
+        
+        // Use autocomplete element instead of select for better UX in new Moodle versions
         $mform->addElement('autocomplete', $elementname,
             $this->get_field()->get_formatted_name(),
-            $formattedoptions,
-            $attributes);
+            $formattedoptions, [
+                'multiple' => true,
+                'noselectionstring' => get_string('noselection', 'form'),
+                'placeholder' => get_string('search', 'core')
+            ]);
 
-        if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
-            $mform->setDefault($elementname, $defaultkey);
+        $clearbtnname = $this->get_form_element_name() . '_cls';
+        $mform->addElement('button', $clearbtnname,
+            get_string('clear', 'customfield_multiselect'));
+
+        // Set default values - autocomplete expects an array of keys
+        $defaultvalues = $this->get_default_value();
+        if (!empty($defaultvalues)) {
+            $mform->setDefault($elementname, $defaultvalues);
         }
+        
         if ($field->get_configdata_property('required')) {
             $mform->addRule($elementname, null, 'required', null, 'client');
         }
+
+        $PAGE->requires->js_call_amd('customfield_multiselect/clear', 'init', array(
+            "id_{$clearbtnname}", "id_{$elementname}"
+        ));
+
     }
 
     /**
@@ -120,6 +137,7 @@ class data_controller extends \core_customfield\data_controller {
      *    fields for this instance will be added, otherwise the default values will be added.
      */
     public function instance_form_before_set_data(\stdClass $instance) {
+        // For autocomplete elements, we need to pass the array of selected keys
         $instance->{$this->get_form_element_name()} = $this->get_value();
     }
 
@@ -134,7 +152,13 @@ class data_controller extends \core_customfield\data_controller {
         if (!property_exists($datanew, $elementname)) {
             return;
         }
-        $value = implode(',', $datanew->$elementname);
+        
+        // Handle both array and string values from autocomplete
+        $value = $datanew->$elementname;
+        if (is_array($value)) {
+            $value = implode(',', $value);
+        }
+        
         $this->data->set($this->datafield(), $value);
         $this->data->set('value', $value);
         $this->save();
@@ -143,14 +167,16 @@ class data_controller extends \core_customfield\data_controller {
     /**
      * Returns the value as it is stored in the database or default value if data record is not present
      *
-     * @return string comma separated list of items
+     * @return array
      */
+    /*
     public function get_value() {
         if (!$this->get('id')) {
             return $this->get_default_value();
         }
-        return $this->get($this->datafield());
+        return explode(',', $this->get($this->datafield()));
     }
+    */
 
     /**
      * Set the value as it should be stored in the database
@@ -169,7 +195,7 @@ class data_controller extends \core_customfield\data_controller {
      * @return bool
      */
     protected function is_empty($value): bool {
-        return trim($value) === "";
+        return empty($value);
     }
 
     /**
@@ -180,19 +206,15 @@ class data_controller extends \core_customfield\data_controller {
      * @return mixed|null value or null if empty
      */
     public function export_value() {
-        $values = $this->get_value(); // This is a string of comma separated list of indexes.
+        $values = $this->get_value(); // This is a an array of indexes.
 
         if ($this->is_empty($values)) {
             return null;
         }
-        // Change into an array for parsing.
-        $valuesarray = explode(',', $values);
-        if (!$valuesarray) {
-            $valuesarray = [];
-        }
+
         $commasepoptionvalues = "";
-        $options = $this->get_field()->get_options();
-        foreach ($valuesarray as $val) {
+        $options = field_controller::get_options($this->get_field());
+        foreach ($values as $val) {
             if (!empty($options[$val])) {
                 $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
                     format_string($options[$val], true,
@@ -201,4 +223,5 @@ class data_controller extends \core_customfield\data_controller {
         }
         return $commasepoptionvalues;
     }
+
 }

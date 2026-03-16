@@ -25,13 +25,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['errordefaultvaluenotinlist'] = 'The default value "{$a}" must be one of the options from the list above.';
-$string['errornotenoughoptions'] = 'Please provide at least two options, with each on a new line.';
-$string['invalidoption'] = 'Invalid option selected';
-$string['menuoptions'] = 'Menu options (one per line)';
-$string['defaultvalue'] = 'Default value';
-$string['defaultvalue_help'] = 'Default value as comma separated values';
-$string['clear'] = 'Clear selection';
-$string['pluginname'] = 'Multiselect menu';
-$string['privacy:metadata'] = 'The Multiselect menu field type plugin doesn\'t store any personal data; it uses tables defined in core.';
-$string['specificsettings'] = 'Multiselect menu field settings';
+$string['errordefaultvaluenotinlist'] = 'Der Standardwert "{$a}" muss einer der Optionen aus der Liste oben sein.';
+$string['errornotenoughoptions'] = 'Bitte geben Sie mindestens zwei Optionen ein, mit jeder auf einer neuen Zeile.';
+$string['invalidoption'] = 'Ungültige Option ausgewählt';
+$string['menuoptions'] = 'Menüoptionen (eine pro Zeile)';
+$string['defaultvalue'] = 'Standardwert';
+$string['defaultvalue_help'] = 'Standardwert als kommagetrennte Werte';
+$string['clear'] = 'Auswahl löschen';
+$string['pluginname'] = 'Multiselect-Menü';
+$string['privacy:metadata'] = 'Das Multiselect-Menü-Feldtyp-Plugin speichert keine persönlichen Daten; es verwendet Tabellen, die in core definiert sind.';
+$string['specificsettings'] = 'Multiselect-Menü-Feld-Einstellungen';
