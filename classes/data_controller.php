@@ -14,20 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
-/**
- * Customfield multiselect Type
- *
- * @package   customfield_multiselect
- * @copyright  2020 CALL Learning 2020 - Laurent David <laurent@call-learning.fr>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace customfield_multiselect;
 
 use core_customfield\data;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class data
@@ -37,7 +26,6 @@ defined('MOODLE_INTERNAL') || die;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class data_controller extends \core_customfield\data_controller {
-
     /**
      * Datafield value (here 'value')
      *
@@ -97,11 +85,14 @@ class data_controller extends \core_customfield\data_controller {
         }
 
         $elementname = $this->get_form_element_name();
-        $attributes = array('multiple' => true);
-        $mform->addElement('autocomplete', $elementname,
+        $attributes = ['multiple' => true];
+        $mform->addElement(
+            'autocomplete',
+            $elementname,
             $this->get_field()->get_formatted_name(),
             $formattedoptions,
-            $attributes);
+            $attributes
+        );
 
         if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
             $mform->setDefault($elementname, $defaultkey);
@@ -195,8 +186,11 @@ class data_controller extends \core_customfield\data_controller {
         foreach ($valuesarray as $val) {
             if (!empty($options[$val])) {
                 $commasepoptionvalues .= (empty($commasepoptionvalues) ? '' : ', ') .
-                    format_string($options[$val], true,
-                        ['context' => $this->get_field()->get_handler()->get_configuration_context()]);
+                    format_string(
+                        $options[$val],
+                        true,
+                        ['context' => $this->get_field()->get_handler()->get_configuration_context()]
+                    );
             }
         }
         return $commasepoptionvalues;

@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * Customfield multiselect Type
  *
@@ -27,4 +26,4 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'customfield_multiselect';
 $plugin->version   = 2025030100;
-$plugin->requires  = 2025020100;
+$plugin->requires  = 2024100707;

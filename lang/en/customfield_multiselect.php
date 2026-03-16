@@ -25,11 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['defaultvalue'] = 'Default value';
 $string['errordefaultvaluenotinlist'] = 'The default value "{$a}" must be one of the options from the list above.';
 $string['errornotenoughoptions'] = 'Please provide at least two options, with each on a new line.';
 $string['invalidoption'] = 'Invalid option selected';
 $string['menuoptions'] = 'Menu options (one per line)';
-$string['defaultvalue'] = 'Default value';
 $string['pluginname'] = 'Multiselect menu';
 $string['privacy:metadata'] = 'The Multiselect menu field type plugin doesn\'t store any personal data; it uses tables defined in core.';
 $string['specificsettings'] = 'Multiselect menu field settings';

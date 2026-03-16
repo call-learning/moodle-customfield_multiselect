@@ -1,3 +1,4 @@
+nnamespace customfield_multiselect;
 <?php
 // This file is part of Moodle - http://moodle.org/
 //
@@ -34,8 +35,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2020 CALL Learning 2020 - Laurent David <laurent@call-learning.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class customfield_multiselect_plugin_testcase extends advanced_testcase {
-
+final class plugin_test extends advanced_testcase {
     /** @var stdClass[] */
     private $courses = [];
     /** @var \core_customfield\category_controller */
@@ -49,6 +49,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
      * Tests set up.
      */
     public function setUp() {
+        parent::setUp();
         $this->resetAfterTest();
 
         $generator = $this->getDataGenerator()->get_plugin_generator('core_customfield');
@@ -56,16 +57,23 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
 
         $this->cfields[1] = $generator->create_field(
             ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield1', 'type' => 'multiselect',
-                'configdata' => ['options' => "a\nb\nc"]]);
+            'configdata' => ['options' => "a\nb\nc"]]
+        );
         $this->cfields[2] = $generator->create_field(
             ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield2', 'type' => 'multiselect',
-                'configdata' => ['required' => 1, 'options' => "a\nb\nc"]]);
+            'configdata' => ['required' => 1,
+            'options' => "a\nb\nc"]]
+        );
         $this->cfields[3] = $generator->create_field(
             ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield3', 'type' => 'multiselect',
-                'configdata' => ['defaultvalue' => 'b', 'options' => "a\nb\nc"]]);
+            'configdata' => ['defaultvalue' => 'b',
+            'options' => "a\nb\nc"]]
+        );
         $this->cfields[4] = $generator->create_field(
             ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield3', 'type' => 'multiselect',
-                'configdata' => ['defaultvalue' => "b,c", 'options' => "a\nb\nc"]]);
+            'configdata' => ['defaultvalue' => "b,c",
+            'options' => "a\nb\nc"]]
+        );
 
         $this->courses[1] = $this->getDataGenerator()->create_course();
         $this->courses[2] = $this->getDataGenerator()->create_course();
@@ -80,7 +88,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
     /**
      * Test for initialising field and data controllers
      */
-    public function test_initialise() {
+    public function test_initialise(): void {
         $f = \core_customfield\field_controller::create($this->cfields[1]->get('id'));
         $this->assertTrue($f instanceof field_controller);
 
@@ -99,7 +107,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
      *
      * Create a configuration form and submit it with the same values as in the field
      */
-    public function test_config_form() {
+    public function test_config_form(): void {
         $submitdata = (array) $this->cfields[1]->to_record();
         $submitdata['configdata'] = $this->cfields[1]->get('configdata');
 
@@ -114,7 +122,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
     /**
      * Test for instance form functions
      */
-    public function test_instance_form() {
+    public function test_instance_form(): void {
         global $CFG;
         require_once($CFG->dirroot . '/customfield/tests/fixtures/test_instance_form.php');
         $this->setAdminUser();
@@ -123,15 +131,19 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
         // First try to submit without required field.
         $submitdata = (array) $this->courses[1];
         core_customfield_test_instance_form::mock_submit($submitdata, []);
-        $form = new core_customfield_test_instance_form('POST',
-            ['handler' => $handler, 'instance' => $this->courses[1]]);
+        $form = new core_customfield_test_instance_form(
+            'POST',
+            ['handler' => $handler, 'instance' => $this->courses[1]]
+        );
         $this->assertFalse($form->is_validated());
 
         // Now with required field.
         $submitdata['customfield_myfield2'] = "1";
         core_customfield_test_instance_form::mock_submit($submitdata, []);
-        $form = new core_customfield_test_instance_form('POST',
-            ['handler' => $handler, 'instance' => $this->courses[1]]);
+        $form = new core_customfield_test_instance_form(
+            'POST',
+            ['handler' => $handler, 'instance' => $this->courses[1]]
+        );
         $this->assertTrue($form->is_validated());
 
         $data = $form->get_data();
@@ -143,7 +155,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
     /**
      * Test for instance form functions and check submitted values
      */
-    public function test_instance_form_values() {
+    public function test_instance_form_values(): void {
         global $CFG;
         require_once($CFG->dirroot . '/customfield/tests/fixtures/test_instance_form.php');
         $this->setAdminUser();
@@ -153,8 +165,10 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
         $submitdata['customfield_myfield2'] = [1, 2];
         $submitdata['customfield_myfield2'] = [1, 2];
         core_customfield_test_instance_form::mock_submit($submitdata, []);
-        $form = new core_customfield_test_instance_form('POST',
-            ['handler' => $handler, 'instance' => $this->courses[1]]);
+        $form = new core_customfield_test_instance_form(
+            'POST',
+            ['handler' => $handler, 'instance' => $this->courses[1]]
+        );
         $this->assertTrue($form->is_validated());
 
         $data = $form->get_data();
@@ -166,7 +180,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
     /**
      * Test for data_controller::get_value and export_value
      */
-    public function test_get_export_value() {
+    public function test_get_export_value(): void {
         $this->assertEquals("0", $this->cfdata[1]->get_value());
         $this->assertEquals('a', $this->cfdata[1]->export_value());
 
@@ -187,7 +201,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
      *
      * @return array
      */
-    public function parse_value_provider() : array {
+    public function parse_value_provider(): array {
         return [
             ['Red', "0"],
             ['Blue|Green', "1,2"],
@@ -205,7 +219,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
      *
      * @dataProvider parse_value_provider
      */
-    public function test_parse_value(string $value, string $expected) {
+    public function test_parse_value(string $value, string $expected): void {
         $generator = $this->getDataGenerator()->get_plugin_generator('core_customfield');
         $field = $generator->create_field([
             'categoryid' => $this->cfcat->get('id'),
@@ -222,7 +236,7 @@ class customfield_multiselect_plugin_testcase extends advanced_testcase {
     /**
      * Deleting fields and data
      */
-    public function test_delete() {
+    public function test_delete(): void {
         $this->cfcat->get_handler()->delete_all();
     }
 }

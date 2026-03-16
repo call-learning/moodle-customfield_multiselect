@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Customfield multiselect Type
- *
- * @package   customfield_multiselect
- * @copyright  2020 CALL Learning 2020 - Laurent David <laurent@call-learning.fr>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace customfield_multiselect;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Class field
@@ -65,7 +55,7 @@ class field_controller extends \core_customfield\field_controller {
         if ($this->get_configdata_property('options')) {
             $options = preg_split("/\s*\n\s*/", trim($this->get_configdata_property('options')));
         } else {
-            $options = array();
+            $options = [];
         }
         return $options;
     }
@@ -100,8 +90,11 @@ class field_controller extends \core_customfield\field_controller {
             foreach (explode(',', $defaultvalue) as $val) {
                 $defaultkey = array_search($val, $options);
                 if ($defaultkey === false) {
-                    $errors['configdata[defaultvalue]'] = get_string('errordefaultvaluenotinlist',
-                        'customfield_multiselect', $val);
+                    $errors['configdata[defaultvalue]'] = get_string(
+                        'errordefaultvaluenotinlist',
+                        'customfield_multiselect',
+                        $val
+                    );
                     break;
                 }
             }
@@ -122,7 +115,7 @@ class field_controller extends \core_customfield\field_controller {
      */
     public function parse_value(string $value) {
         $options = $this->get_options();
-        $values = array_map(function($val) {
+        $values = array_map(function ($val) {
             return trim(strtolower($val));
         }, explode(self::PARSE_SEPARATOR, $value));
         $indexvalues = [];
