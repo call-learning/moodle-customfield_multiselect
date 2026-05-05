@@ -233,6 +233,69 @@ final class plugin_test extends \advanced_testcase {
     }
 
     /**
+     * Test course backup and restore of multiselect custom field values.
+     *
+     * @covers \customfield_multiselect\data_controller::backup_define_structure
+     * @covers \customfield_multiselect\data_controller::restore_define_structure
+     */
+    public function test_backup_and_restore(): void {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot . '/customfield/tests/fixtures/test_instance_form.php');
+
+        $this->setAdminUser();
+        $handler = $this->cfcat->get_handler();
+
+        $submitdata = (array) $this->courses[1];
+        $submitdata['customfield_myfield1'] = [1, 2];
+        $submitdata['customfield_myfield2'] = [0];
+        core_customfield_test_instance_form::mock_submit($submitdata, []);
+        $form = new core_customfield_test_instance_form(
+            'POST',
+            ['handler' => $handler, 'instance' => $this->courses[1]]
+        );
+        $this->assertTrue($form->is_validated());
+
+        $data = $form->get_data();
+        $this->assertNotEmpty($data->customfield_myfield1);
+        $this->assertNotEmpty($data->customfield_myfield2);
+        $handler->instance_form_save($data);
+
+        $cf1data = $DB->get_record(
+            'customfield_data',
+            ['instanceid' => $this->courses[1]->id, 'fieldid' => $this->cfields[1]->get('id')],
+            '*',
+            MUST_EXIST
+        );
+        $this->assertSame('1,2', $cf1data->value);
+
+        $backupid = $this->backup($this->courses[1]);
+        $newcourseid = $this->restore($backupid, $this->courses[1], '_copy');
+
+        $newcf1data = $DB->get_record(
+            'customfield_data',
+            ['instanceid' => $newcourseid, 'fieldid' => $this->cfields[1]->get('id')],
+            '*',
+            MUST_EXIST
+        );
+        $this->assertSame('1,2', $newcf1data->value);
+        $newcf1controller = \core_customfield\data_controller::create($newcf1data->id);
+        $this->assertSame('1,2', $newcf1controller->get_value());
+        $this->assertSame('b, c', $newcf1controller->export_value());
+
+        $newcf2data = $DB->get_record(
+            'customfield_data',
+            ['instanceid' => $newcourseid, 'fieldid' => $this->cfields[2]->get('id')],
+            '*',
+            MUST_EXIST
+        );
+        $this->assertSame('0', $newcf2data->value);
+        $newcf2controller = \core_customfield\data_controller::create($newcf2data->id);
+        $this->assertSame('0', $newcf2controller->get_value());
+        $this->assertSame('a', $newcf2controller->export_value());
+    }
+
+    /**
      * Returns a backed up field by shortname.
      *
      * @param array $fields
@@ -292,5 +355,78 @@ final class plugin_test extends \advanced_testcase {
      */
     public function test_delete(): void {
         $this->cfcat->get_handler()->delete_all();
+    }
+
+    /**
+     * Backs a course up to temp directory.
+     *
+     * @param \stdClass $course Course object to backup
+     * @return string ID of backup
+     */
+    protected function backup($course): string {
+        global $USER, $CFG;
+
+        require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+
+        // Turn off file logging, otherwise it can't delete the file (Windows).
+        $CFG->backup_file_logger_level = \backup::LOG_NONE;
+
+        // Do backup with default settings. MODE_IMPORT means it will just
+        // create the directory and not zip it.
+        $bc = new \backup_controller(
+            \backup::TYPE_1COURSE,
+            $course->id,
+            \backup::FORMAT_MOODLE,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_IMPORT,
+            $USER->id
+        );
+        $bc->get_plan()->get_setting('users')->set_status(\backup_setting::NOT_LOCKED);
+        $bc->get_plan()->get_setting('users')->set_value(true);
+        $bc->get_plan()->get_setting('logs')->set_value(true);
+        $backupid = $bc->get_backupid();
+
+        $bc->execute_plan();
+        $bc->destroy();
+
+        return $backupid;
+    }
+
+    /**
+     * Restores a course from temp directory.
+     *
+     * @param string $backupid Backup id
+     * @param \stdClass $course Original course object
+     * @param string $suffix Suffix to add after original course shortname and fullname
+     * @return int New course id
+     * @throws \restore_controller_exception
+     */
+    protected function restore(string $backupid, $course, string $suffix): int {
+        global $USER, $CFG;
+
+        require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+
+        // Do restore to new course with default settings.
+        $newcourseid = \restore_dbops::create_new_course(
+            $course->fullname . $suffix,
+            $course->shortname . $suffix,
+            $course->category
+        );
+        $rc = new \restore_controller(
+            $backupid,
+            $newcourseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE
+        );
+        $rc->get_plan()->get_setting('logs')->set_value(true);
+        $rc->get_plan()->get_setting('users')->set_value(true);
+
+        $this->assertTrue($rc->execute_precheck());
+        $rc->execute_plan();
+        $rc->destroy();
+
+        return $newcourseid;
     }
 }
