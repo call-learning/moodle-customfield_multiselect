@@ -26,8 +26,6 @@ namespace customfield_multiselect;
 
 use core_customfield_test_instance_form;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Functional test for customfield_multiselect
  *
@@ -87,6 +85,9 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for initialising field and data controllers
+     *
+     * @covers \customfield_multiselect\field_controller
+     * @covers \customfield_multiselect\data_controller
      */
     public function test_initialise(): void {
         $f = \core_customfield\field_controller::create($this->cfields[1]->get('id'));
@@ -106,6 +107,8 @@ final class plugin_test extends \advanced_testcase {
      * Test for configuration form functions
      *
      * Create a configuration form and submit it with the same values as in the field
+     *
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_config_form(): void {
         $this->setAdminUser();
@@ -121,6 +124,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for instance form functions
+     *
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_instance_form(): void {
         global $CFG;
@@ -154,6 +159,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for instance form functions and check submitted values
+     *
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_instance_form_values(): void {
         global $CFG;
@@ -179,6 +186,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for data_controller::get_value and export_value
+     *
+     * @covers \customfield_multiselect\data_controller
      */
     public function test_get_export_value(): void {
         $this->assertSame("0", $this->cfdata[1]->get_value());
@@ -200,6 +209,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for data_controller::set_value.
+     *
+     * @covers \customfield_multiselect\data_controller
      */
     public function test_set_value_accepts_array_and_string(): void {
         $data = \core_customfield\data_controller::create(0, null, $this->cfields[1]);
@@ -213,6 +224,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test backup receives a scalar value, including empty multiselect data.
+     *
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_backup_value_is_scalar_csv_string(): void {
         $this->setAdminUser();
@@ -318,7 +331,7 @@ final class plugin_test extends \advanced_testcase {
      *
      * @return array
      */
-    public function parse_value_provider(): array {
+    public static function parse_value_provider(): array {
         return [
             ['Red', "0"],
             ['Blue|Green', "1,2"],
@@ -331,10 +344,11 @@ final class plugin_test extends \advanced_testcase {
      * Test field parse_value method
      *
      * @param string $value
-     * @param int $expected
+     * @param string $expected
      * @return void
      *
      * @dataProvider parse_value_provider
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_parse_value(string $value, string $expected): void {
         $generator = $this->getDataGenerator()->get_plugin_generator('core_customfield');
@@ -352,6 +366,8 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Deleting fields and data
+     *
+     * @covers \customfield_multiselect\field_controller
      */
     public function test_delete(): void {
         $this->cfcat->get_handler()->delete_all();

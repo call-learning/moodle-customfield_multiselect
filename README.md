@@ -1,7 +1,7 @@
 Multiselect Custom Field
 ========================
 
-[![Build Status](https://travis-ci.org/call-learning/moodle-customfield_multiselect.svg?branch=master)](https://travis-ci.org/call-learning/moodle-customfield_multiselect)
+[![Moodle Plugin CI](https://github.com/call-learning/moodle-customfield_multiselect/actions/workflows/moodle-plugin-ci.yml/badge.svg)](https://github.com/call-learning/moodle-customfield_multiselect/actions/workflows/moodle-plugin-ci.yml)
 
 
 This plugin is a new multiselect profile inspired from the existing select customfield (customfield/field/select)
