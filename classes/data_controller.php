@@ -146,11 +146,15 @@ class data_controller extends \core_customfield\data_controller {
     /**
      * Set the value as it should be stored in the database
      *
-     * @param array $value to be set and transformed into a comma separated string
+     * @param array|string $value to be set and transformed into a comma separated string
      * @return data
      */
     public function set_value($value) {
-        return $this->set($this->datafield(), implode(',', $value));
+        if (is_array($value)) {
+            $value = implode(',', $value);
+        }
+
+        return $this->set($this->datafield(), $value);
     }
 
     /**

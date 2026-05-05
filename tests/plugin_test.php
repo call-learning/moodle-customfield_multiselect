@@ -1,4 +1,3 @@
-nnamespace customfield_multiselect;
 <?php
 // This file is part of Moodle - http://moodle.org/
 //
@@ -23,8 +22,9 @@ nnamespace customfield_multiselect;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use customfield_multiselect\data_controller;
-use customfield_multiselect\field_controller;
+namespace customfield_multiselect;
+
+use core_customfield_test_instance_form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,7 +35,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2020 CALL Learning 2020 - Laurent David <laurent@call-learning.fr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class plugin_test extends advanced_testcase {
+final class plugin_test extends \advanced_testcase {
     /** @var stdClass[] */
     private $courses = [];
     /** @var \core_customfield\category_controller */
@@ -48,7 +48,7 @@ final class plugin_test extends advanced_testcase {
     /**
      * Tests set up.
      */
-    public function setUp() {
+    public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
 
@@ -108,15 +108,15 @@ final class plugin_test extends advanced_testcase {
      * Create a configuration form and submit it with the same values as in the field
      */
     public function test_config_form(): void {
+        $this->setAdminUser();
         $submitdata = (array) $this->cfields[1]->to_record();
         $submitdata['configdata'] = $this->cfields[1]->get('configdata');
 
-        \core_customfield\field_config_form::mock_submit($submitdata, []);
-        $handler = $this->cfcat->get_handler();
-        $form = $handler->get_field_config_form($this->cfields[1]);
+        $submitdata = \core_customfield\field_config_form::mock_ajax_submit($submitdata);
+        $form = new \core_customfield\field_config_form(null, null, 'post', '', null, true, $submitdata, true);
+        $form->set_data_for_dynamic_submission();
         $this->assertTrue($form->is_validated());
-        $data = $form->get_data();
-        $handler->save_field_configuration($this->cfields[1], $data);
+        $form->process_dynamic_submission();
     }
 
     /**
@@ -181,18 +181,72 @@ final class plugin_test extends advanced_testcase {
      * Test for data_controller::get_value and export_value
      */
     public function test_get_export_value(): void {
-        $this->assertEquals("0", $this->cfdata[1]->get_value());
+        $this->assertSame("0", $this->cfdata[1]->get_value());
+        $this->assertIsString($this->cfdata[1]->get_value());
         $this->assertEquals('a', $this->cfdata[1]->export_value());
 
         // Field without data but with a default value.
-        $d = core_customfield\data_controller::create(0, null, $this->cfields[3]);
-        $this->assertEquals("1", $d->get_value());
+        $d = \core_customfield\data_controller::create(0, null, $this->cfields[3]);
+        $this->assertSame("1", $d->get_value());
+        $this->assertIsString($d->get_value());
         $this->assertEquals('b', $d->export_value());
 
         // Field without data but with a default value.
-        $d = core_customfield\data_controller::create(0, null, $this->cfields[4]);
-        $this->assertEquals("1,2", $d->get_value());
+        $d = \core_customfield\data_controller::create(0, null, $this->cfields[4]);
+        $this->assertSame("1,2", $d->get_value());
+        $this->assertIsString($d->get_value());
         $this->assertEquals('b, c', $d->export_value());
+    }
+
+    /**
+     * Test for data_controller::set_value.
+     */
+    public function test_set_value_accepts_array_and_string(): void {
+        $data = \core_customfield\data_controller::create(0, null, $this->cfields[1]);
+
+        $data->set_value([1, 2]);
+        $this->assertSame('1,2', $data->get('value'));
+
+        $data->set_value('0,2');
+        $this->assertSame('0,2', $data->get('value'));
+    }
+
+    /**
+     * Test backup receives a scalar value, including empty multiselect data.
+     */
+    public function test_backup_value_is_scalar_csv_string(): void {
+        $this->setAdminUser();
+        $handler = $this->cfcat->get_handler();
+
+        $fields = $handler->get_instance_data_for_backup($this->courses[1]->id);
+        $field = $this->get_backup_field_by_shortname($fields, 'myfield1');
+        $this->assertSame('0', $field['value']);
+        $this->assertIsString($field['value']);
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_customfield');
+        $generator->add_instance_data($this->cfields[1], $this->courses[3]->id, []);
+
+        $fields = $handler->get_instance_data_for_backup($this->courses[3]->id);
+        $field = $this->get_backup_field_by_shortname($fields, 'myfield1');
+        $this->assertSame('', $field['value']);
+        $this->assertIsString($field['value']);
+    }
+
+    /**
+     * Returns a backed up field by shortname.
+     *
+     * @param array $fields
+     * @param string $shortname
+     * @return array
+     */
+    private function get_backup_field_by_shortname(array $fields, string $shortname): array {
+        foreach ($fields as $field) {
+            if ($field['shortname'] === $shortname) {
+                return $field;
+            }
+        }
+
+        $this->fail("Backup field '{$shortname}' was not found.");
     }
 
 

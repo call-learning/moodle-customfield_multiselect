@@ -25,5 +25,5 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'customfield_multiselect';
-$plugin->version   = 2025030100;
+$plugin->version   = 2026050500;
 $plugin->requires  = 2024100707;
