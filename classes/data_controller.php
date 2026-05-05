@@ -94,8 +94,17 @@ class data_controller extends \core_customfield\data_controller {
             $attributes
         );
 
-        if (($defaultkey = array_search($config['defaultvalue'], $options)) !== false) {
-            $mform->setDefault($elementname, $defaultkey);
+        if (!empty($config['defaultvalue'])) {
+            $defaultvalues = [];
+            foreach (explode(',', $config['defaultvalue']) as $rawvalue) {
+                $defaultkey = array_search(trim($rawvalue), $options);
+                if ($defaultkey !== false) {
+                    $defaultvalues[] = $defaultkey;
+                }
+            }
+            if ($defaultvalues) {
+                $mform->setDefault($elementname, $defaultvalues);
+            }
         }
         if ($field->get_configdata_property('required')) {
             $mform->addRule($elementname, null, 'required', null, 'client');
@@ -111,7 +120,8 @@ class data_controller extends \core_customfield\data_controller {
      *    fields for this instance will be added, otherwise the default values will be added.
      */
     public function instance_form_before_set_data(\stdClass $instance) {
-        $instance->{$this->get_form_element_name()} = $this->get_value();
+        $value = $this->get_value();
+        $instance->{$this->get_form_element_name()} = ($value === '') ? [] : explode(',', $value);
     }
 
     /**
@@ -125,9 +135,14 @@ class data_controller extends \core_customfield\data_controller {
         if (!property_exists($datanew, $elementname)) {
             return;
         }
-        $value = implode(',', $datanew->$elementname);
-        $this->data->set($this->datafield(), $value);
-        $this->data->set('value', $value);
+        $value = $datanew->$elementname;
+        if (!is_array($value)) {
+            $value = ($value === '' || $value === null) ? [] : [$value];
+        }
+
+        $csv = implode(',', $value);
+        $this->data->set($this->datafield(), $csv);
+        $this->data->set('value', $csv);
         $this->save();
     }
 
